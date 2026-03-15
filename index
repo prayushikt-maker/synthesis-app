@@ -1,0 +1,1262 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Synthesis">
+<meta name="theme-color" content="#0a0907">
+<title>Synthesis</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;1,400&family=DM+Sans:wght@300;400;500&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink: #1a1710;
+    --paper: #f5f1e8;
+    --paper2: #ede8dc;
+    --accent: #c8783a;
+    --accent2: #8b4513;
+    --muted: #7a7060;
+    --faint: #d4cfc2;
+    --signal: #2d5a27;
+    --signal-bg: #f0f7ee;
+    --dive-bg: #faf8f4;
+    --rabbit-bg: #f7f3ef;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--ink);
+    color: var(--paper);
+    font-family: 'DM Sans', sans-serif;
+    min-height: 100vh;
+    overscroll-behavior: none;
+  }
+
+  /* ── SETUP SCREEN ── */
+  #setupScreen {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 32px 24px;
+    background: var(--ink);
+  }
+
+  .setup-logo {
+    font-family: 'Playfair Display', serif;
+    font-size: 42px;
+    letter-spacing: -1px;
+    color: var(--paper);
+    margin-bottom: 6px;
+  }
+  .setup-tagline {
+    font-size: 13px;
+    color: var(--muted);
+    font-family: 'DM Mono', monospace;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    margin-bottom: 48px;
+  }
+
+  .setup-card {
+    background: #221e17;
+    border: 0.5px solid #3a3428;
+    border-radius: 16px;
+    padding: 28px 24px;
+    width: 100%;
+    max-width: 420px;
+  }
+
+  .setup-label {
+    font-size: 11px;
+    color: var(--muted);
+    font-family: 'DM Mono', monospace;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+    display: block;
+  }
+
+  .setup-input {
+    width: 100%;
+    background: #1a1710;
+    border: 0.5px solid #3a3428;
+    border-radius: 10px;
+    padding: 14px 16px;
+    font-size: 14px;
+    font-family: 'DM Mono', monospace;
+    color: var(--accent);
+    outline: none;
+    letter-spacing: 0.05em;
+    margin-bottom: 20px;
+    transition: border-color 0.2s;
+  }
+  .setup-input:focus { border-color: var(--accent); }
+  .setup-input::placeholder { color: #3a3428; }
+
+  .setup-hint {
+    font-size: 12px;
+    color: var(--muted);
+    line-height: 1.6;
+    margin-bottom: 24px;
+  }
+  .setup-hint a { color: var(--accent); text-decoration: none; }
+
+  .primary-btn {
+    width: 100%;
+    background: var(--accent);
+    color: var(--ink);
+    font-size: 14px;
+    font-weight: 500;
+    font-family: 'DM Sans', sans-serif;
+    padding: 15px;
+    border-radius: 10px;
+    border: none;
+    cursor: pointer;
+    transition: background 0.2s, transform 0.1s;
+    letter-spacing: 0.02em;
+  }
+  .primary-btn:hover { background: #d4854a; }
+  .primary-btn:active { transform: scale(0.98); }
+  .primary-btn:disabled { background: #3a3428; color: var(--muted); cursor: not-allowed; }
+
+  /* ── MAIN APP ── */
+  #mainApp { display: none; min-height: 100vh; background: var(--ink); }
+
+  .topbar {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    background: rgba(10, 9, 7, 0.95);
+    backdrop-filter: blur(12px);
+    padding: 16px 20px 12px;
+    border-bottom: 0.5px solid #2a2420;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .topbar-logo {
+    font-family: 'Playfair Display', serif;
+    font-size: 22px;
+    color: var(--paper);
+    letter-spacing: -0.5px;
+  }
+
+  .topbar-right { display: flex; align-items: center; gap: 12px; }
+
+  .date-pill {
+    font-size: 11px;
+    color: var(--muted);
+    font-family: 'DM Mono', monospace;
+    letter-spacing: 0.06em;
+  }
+
+  .gen-btn {
+    background: var(--accent);
+    color: var(--ink);
+    font-size: 12px;
+    font-weight: 500;
+    padding: 7px 14px;
+    border-radius: 20px;
+    border: none;
+    cursor: pointer;
+    font-family: 'DM Sans', sans-serif;
+    transition: all 0.2s;
+    white-space: nowrap;
+  }
+  .gen-btn:hover { background: #d4854a; }
+  .gen-btn:disabled { background: #2a2420; color: var(--muted); cursor: not-allowed; }
+
+  /* ── EMPTY STATE ── */
+  #emptyState {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 80px 32px;
+    text-align: center;
+  }
+
+  .empty-word {
+    font-family: 'Playfair Display', serif;
+    font-size: 64px;
+    color: #221e17;
+    letter-spacing: -2px;
+    line-height: 1;
+    margin-bottom: 24px;
+  }
+
+  .empty-sub {
+    font-size: 14px;
+    color: var(--muted);
+    line-height: 1.8;
+    max-width: 280px;
+    margin-bottom: 32px;
+  }
+
+  /* ── BRIEF CONTENT ── */
+  #briefContent { display: none; padding-bottom: 80px; }
+
+  /* SIGNAL SECTION */
+  .signal-section {
+    background: #0f0d09;
+    border-bottom: 0.5px solid #2a2420;
+    padding: 24px 20px;
+  }
+
+  .section-kicker {
+    font-size: 10px;
+    font-family: 'DM Mono', monospace;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .section-kicker::after {
+    content: '';
+    flex: 1;
+    height: 0.5px;
+    background: #2a2420;
+  }
+
+  .signal-text {
+    font-family: 'Playfair Display', serif;
+    font-size: 16px;
+    line-height: 1.9;
+    color: #d4cfc2;
+    font-style: italic;
+  }
+
+  /* DEEP DIVE SECTION */
+  .dives-section { padding: 0; }
+
+  .dive-card {
+    border-bottom: 0.5px solid #1e1a14;
+    padding: 24px 20px;
+  }
+
+  .dive-topic {
+    font-size: 10px;
+    font-family: 'DM Mono', monospace;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 8px;
+  }
+
+  .dive-headline {
+    font-family: 'Playfair Display', serif;
+    font-size: 20px;
+    line-height: 1.3;
+    color: var(--paper);
+    margin-bottom: 14px;
+    letter-spacing: -0.3px;
+  }
+
+  .dive-body {
+    font-size: 15px;
+    line-height: 1.85;
+    color: #a89f8c;
+    margin-bottom: 16px;
+  }
+
+  .dive-body .term {
+    color: var(--paper);
+    font-weight: 500;
+    border-bottom: 0.5px solid var(--accent);
+  }
+
+  .dive-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 16px;
+    padding-top: 14px;
+    border-top: 0.5px solid #1e1a14;
+  }
+
+  .read-link {
+    font-size: 12px;
+    color: var(--accent);
+    font-family: 'DM Mono', monospace;
+    letter-spacing: 0.05em;
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+  }
+  .read-link:hover { color: #d4854a; }
+
+  .save-btn-small {
+    background: transparent;
+    border: 0.5px solid #2a2420;
+    color: var(--muted);
+    font-size: 11px;
+    font-family: 'DM Mono', monospace;
+    padding: 5px 12px;
+    border-radius: 20px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .save-btn-small:hover { border-color: var(--accent); color: var(--accent); }
+  .save-btn-small.saved { border-color: var(--signal); color: var(--signal); }
+
+  /* RABBIT HOLE */
+  .rabbit-section {
+    background: #0d0b08;
+    padding: 28px 20px;
+    border-top: 0.5px solid #2a2420;
+  }
+
+  .rabbit-label {
+    font-size: 10px;
+    font-family: 'DM Mono', monospace;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 6px;
+  }
+
+  .rabbit-topic {
+    font-family: 'Playfair Display', serif;
+    font-size: 13px;
+    color: var(--accent);
+    font-style: italic;
+    margin-bottom: 16px;
+  }
+
+  .rabbit-body {
+    font-family: 'Playfair Display', serif;
+    font-size: 16px;
+    line-height: 2;
+    color: #c4bfb0;
+    font-style: italic;
+  }
+
+  /* LOADING */
+  .loading-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(10,9,7,0.92);
+    z-index: 200;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+  }
+  .loading-overlay.show { display: flex; }
+
+  .loading-word {
+    font-family: 'Playfair Display', serif;
+    font-size: 28px;
+    color: var(--paper);
+    opacity: 0;
+    animation: fadeWord 3s infinite;
+  }
+
+  @keyframes fadeWord {
+    0%, 100% { opacity: 0; }
+    20%, 80% { opacity: 1; }
+  }
+
+  .loading-bar-track {
+    width: 180px;
+    height: 1px;
+    background: #2a2420;
+    position: relative;
+    overflow: hidden;
+    border-radius: 1px;
+  }
+  .loading-bar-fill {
+    position: absolute;
+    left: -100%;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background: var(--accent);
+    animation: slide 1.5s ease-in-out infinite;
+  }
+  @keyframes slide { to { left: 100%; } }
+
+  .loading-msg {
+    font-size: 12px;
+    color: var(--muted);
+    font-family: 'DM Mono', monospace;
+    letter-spacing: 0.05em;
+  }
+
+  /* SETTINGS */
+  .settings-btn {
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    padding: 4px;
+    color: var(--muted);
+    font-size: 16px;
+    transition: color 0.2s;
+  }
+  .settings-btn:hover { color: var(--paper); }
+
+  #settingsPanel {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(10,9,7,0.96);
+    z-index: 300;
+    overflow-y: auto;
+    padding: 32px 24px;
+  }
+
+  .settings-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 32px;
+  }
+  .settings-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 24px;
+    color: var(--paper);
+  }
+  .close-btn {
+    background: transparent;
+    border: 0.5px solid #2a2420;
+    color: var(--muted);
+    font-size: 13px;
+    padding: 6px 14px;
+    border-radius: 20px;
+    cursor: pointer;
+    font-family: 'DM Mono', monospace;
+  }
+
+  .settings-section-title {
+    font-size: 10px;
+    font-family: 'DM Mono', monospace;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 12px;
+  }
+
+  .settings-input {
+    width: 100%;
+    background: #1a1710;
+    border: 0.5px solid #2a2420;
+    border-radius: 10px;
+    padding: 12px 14px;
+    font-size: 13px;
+    font-family: 'DM Mono', monospace;
+    color: var(--accent);
+    outline: none;
+    margin-bottom: 24px;
+  }
+
+  .notif-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 0;
+    border-bottom: 0.5px solid #1e1a14;
+  }
+  .notif-label { font-size: 14px; color: var(--paper); }
+  .notif-sub { font-size: 12px; color: var(--muted); margin-top: 2px; }
+
+  .toggle {
+    width: 44px;
+    height: 24px;
+    background: #2a2420;
+    border-radius: 12px;
+    position: relative;
+    cursor: pointer;
+    transition: background 0.2s;
+    border: none;
+  }
+  .toggle.on { background: var(--accent); }
+  .toggle::after {
+    content: '';
+    position: absolute;
+    top: 3px;
+    left: 3px;
+    width: 18px;
+    height: 18px;
+    background: white;
+    border-radius: 50%;
+    transition: transform 0.2s;
+  }
+  .toggle.on::after { transform: translateX(20px); }
+
+  /* NOTIFICATION BELL */
+  .notif-badge {
+    display: none;
+    position: fixed;
+    top: 16px;
+    right: 20px;
+    width: 8px;
+    height: 8px;
+    background: var(--accent);
+    border-radius: 50%;
+    z-index: 50;
+  }
+
+  /* BOTTOM NAV */
+  .bottom-nav {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: rgba(10,9,7,0.97);
+    border-top: 0.5px solid #1e1a14;
+    display: flex;
+    padding: 10px 0 20px;
+    z-index: 100;
+  }
+  .nav-item {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    cursor: pointer;
+    padding: 6px 0;
+    transition: opacity 0.2s;
+  }
+  .nav-icon { font-size: 18px; filter: grayscale(1); opacity: 0.4; transition: all 0.2s; }
+  .nav-label { font-size: 10px; color: var(--muted); font-family: 'DM Mono', monospace; }
+  .nav-item.active .nav-icon { filter: none; opacity: 1; }
+  .nav-item.active .nav-label { color: var(--accent); }
+
+  /* YOUTUBE TAB */
+  #ytTab { display: none; padding: 24px 20px 80px; }
+
+  .yt-input-wrap {
+    background: #141008;
+    border: 0.5px solid #2a2420;
+    border-radius: 14px;
+    padding: 16px;
+    margin-bottom: 16px;
+  }
+  .yt-input {
+    width: 100%;
+    background: transparent;
+    border: none;
+    outline: none;
+    font-size: 14px;
+    font-family: 'DM Sans', sans-serif;
+    color: var(--paper);
+    line-height: 1.5;
+  }
+  .yt-input::placeholder { color: #3a3428; }
+  .yt-footer {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 0.5px solid #1e1a14;
+  }
+
+  .yt-result { margin-top: 8px; }
+  .yt-card {
+    background: #0f0d09;
+    border: 0.5px solid #2a2420;
+    border-radius: 14px;
+    overflow: hidden;
+    margin-bottom: 12px;
+  }
+  .yt-card-head {
+    padding: 14px 16px;
+    border-bottom: 0.5px solid #1e1a14;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .yt-card-label {
+    font-size: 10px;
+    font-family: 'DM Mono', monospace;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--accent);
+  }
+  .yt-card-body { padding: 16px; }
+  .yt-section-head {
+    font-size: 10px;
+    font-family: 'DM Mono', monospace;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin: 14px 0 6px;
+  }
+  .yt-section-head:first-child { margin-top: 0; }
+  .yt-bullet {
+    font-size: 14px;
+    color: #a89f8c;
+    line-height: 1.7;
+    padding: 4px 0 4px 14px;
+    position: relative;
+  }
+  .yt-bullet::before {
+    content: '—';
+    position: absolute;
+    left: 0;
+    color: #3a3428;
+  }
+
+  .verdict-tag {
+    display: inline-block;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-family: 'DM Mono', monospace;
+    margin-top: 6px;
+  }
+  .verdict-yes { background: #0d1a0a; color: #6db56a; border: 0.5px solid #2a4a28; }
+  .verdict-no { background: #1a0d0a; color: #c46060; border: 0.5px solid #4a2a28; }
+
+  .spinner-inline {
+    width: 14px; height: 14px;
+    border: 1.5px solid #2a2420;
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+    display: inline-block;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .error-strip {
+    padding: 14px 16px;
+    background: #1a0d0a;
+    border: 0.5px solid #4a2a28;
+    border-radius: 10px;
+    font-size: 13px;
+    color: #c46060;
+    font-family: 'DM Mono', monospace;
+    line-height: 1.6;
+  }
+
+  @media (max-width: 400px) {
+    .dive-headline { font-size: 18px; }
+    .signal-text { font-size: 15px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- SETUP SCREEN -->
+<div id="setupScreen">
+  <div class="setup-logo">Synthesis</div>
+  <div class="setup-tagline">Your daily intelligence brief</div>
+  <div class="setup-card">
+    <label class="setup-label">Groq API Key</label>
+    <input class="setup-input" type="password" id="setupKey" placeholder="gsk_..." autocomplete="off" />
+    <p class="setup-hint">
+      Get your key from <a href="https://console.groq.com" target="_blank">console.groq.com</a> — starts with gsk_...
+    </p>
+    <button class="primary-btn" onclick="startApp()">Enter Synthesis →</button>
+  </div>
+</div>
+
+<!-- LOADING OVERLAY -->
+<div class="loading-overlay" id="loadingOverlay">
+  <div class="loading-word" id="loadingWord">Reading...</div>
+  <div class="loading-bar-track"><div class="loading-bar-fill"></div></div>
+  <div class="loading-msg" id="loadingMsg">fetching today's sources</div>
+</div>
+
+<!-- SETTINGS PANEL -->
+<div id="settingsPanel">
+  <div class="settings-header">
+    <div class="settings-title">Settings</div>
+    <button class="close-btn" onclick="closeSettings()">close</button>
+  </div>
+
+  <div class="settings-section-title" style="margin-bottom:12px;">API Key</div>
+  <input class="settings-input" type="password" id="settingsKey" placeholder="gsk_..." />
+
+  <div class="settings-section-title">Notifications</div>
+  <div class="notif-row">
+    <div>
+      <div class="notif-label">Morning Brief</div>
+      <div class="notif-sub">Daily reminder at 8:00 AM</div>
+    </div>
+    <button class="toggle" id="notifToggle" onclick="toggleNotifications()"></button>
+  </div>
+
+  <div class="notif-row">
+    <div>
+      <div class="notif-label">Notion Sync</div>
+      <div class="notif-sub">Notion token (optional)</div>
+    </div>
+  </div>
+  <input class="settings-input" type="password" id="notionToken" placeholder="secret_..." style="margin-top:10px;" />
+
+  <button class="primary-btn" style="margin-top:8px;" onclick="saveSettings()">Save Settings</button>
+</div>
+
+<!-- MAIN APP -->
+<div id="mainApp">
+  <div class="topbar">
+    <div class="topbar-logo">Synthesis</div>
+    <div class="topbar-right">
+      <div class="date-pill" id="topbarDate"></div>
+      <button class="gen-btn" id="genBtn" onclick="generateBrief()">Generate Brief</button>
+      <button class="settings-btn" onclick="openSettings()">⚙</button>
+    </div>
+  </div>
+
+  <!-- BRIEF TAB -->
+  <div id="briefTab">
+    <div id="emptyState">
+      <div class="empty-word">Synthesis</div>
+      <div class="empty-sub">Your daily brief — curated, distilled, delivered. 10 minutes to stay sharp.</div>
+      <button class="primary-btn" style="max-width:240px;" onclick="generateBrief()">Generate Today's Brief →</button>
+    </div>
+    <div id="briefContent"></div>
+  </div>
+
+  <!-- YOUTUBE TAB -->
+  <div id="ytTab">
+    <div class="yt-input-wrap">
+      <input class="yt-input" type="url" id="ytUrl" placeholder="Paste a YouTube link to summarise..." />
+      <div class="yt-footer">
+        <button class="gen-btn" onclick="summariseYT()" id="ytBtn">Summarise</button>
+      </div>
+    </div>
+    <div id="ytResult"></div>
+  </div>
+
+  <!-- BOTTOM NAV -->
+  <div class="bottom-nav">
+    <div class="nav-item active" id="nav-brief" onclick="switchTab('brief')">
+      <div class="nav-icon">◈</div>
+      <div class="nav-label">Brief</div>
+    </div>
+    <div class="nav-item" id="nav-yt" onclick="switchTab('yt')">
+      <div class="nav-icon">▶</div>
+      <div class="nav-label">YouTube</div>
+    </div>
+    <div class="nav-item" id="nav-settings" onclick="openSettings()">
+      <div class="nav-icon">⚙</div>
+      <div class="nav-label">Settings</div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── STATE ──
+let apiKey = '';
+let notionToken = '';
+let notifEnabled = false;
+let currentBrief = null;
+
+const TOPICS_ROTATION = [
+  ['AI & Business', 'FMCG & Consumer', 'Supply Chain'],
+  ['FMCG & Consumer', 'Supply Chain', 'Geopolitics & Macro'],
+  ['Supply Chain', 'Geopolitics & Macro', 'AI & Business'],
+  ['Geopolitics & Macro', 'AI & Business', 'FMCG & Consumer']
+];
+
+const CURIOUS_ROTATION = ['Game Theory', 'Mathematics', 'Space', 'Poetry', 'Art', 'Philosophy', 'Neuroscience'];
+
+const RSS_SOURCES = {
+  'AI & Business': [
+    'https://api.allorigins.win/raw?url=https://deeplearning.ai/the-batch/feed/',
+    'https://api.allorigins.win/raw?url=https://stratechery.com/feed/',
+    'https://api.allorigins.win/raw?url=https://feeds.feedburner.com/TechnologyReview'
+  ],
+  'FMCG & Consumer': [
+    'https://api.allorigins.win/raw?url=https://hbr.org/feed',
+    'https://api.allorigins.win/raw?url=https://www.livemint.com/rss/companies',
+    'https://api.allorigins.win/raw?url=https://inc42.com/feed/'
+  ],
+  'Supply Chain': [
+    'https://api.allorigins.win/raw?url=https://www.freightwaves.com/feed',
+    'https://api.allorigins.win/raw?url=https://www.mckinsey.com/capabilities/operations/our-insights/rss'
+  ],
+  'Geopolitics & Macro': [
+    'https://api.allorigins.win/raw?url=https://www.foreignaffairs.com/rss.xml',
+    'https://api.allorigins.win/raw?url=https://www.project-syndicate.org/rss',
+    'https://api.allorigins.win/raw?url=https://www.thehindu.com/opinion/editorial/feeder/default.rss'
+  ],
+  'Game Theory': ['https://api.allorigins.win/raw?url=https://aeon.co/feed.rss'],
+  'Mathematics': ['https://api.allorigins.win/raw?url=https://www.quantamagazine.org/feed/'],
+  'Space': ['https://api.allorigins.win/raw?url=https://www.nasa.gov/rss/dyn/breaking_news.rss'],
+  'Poetry': ['https://api.allorigins.win/raw?url=https://www.poetryfoundation.org/feeds/poems.rss'],
+  'Art': ['https://api.allorigins.win/raw?url=https://www.theguardian.com/artanddesign/rss'],
+  'Philosophy': ['https://api.allorigins.win/raw?url=https://aeon.co/feed.rss'],
+  'Neuroscience': ['https://api.allorigins.win/raw?url=https://www.quantamagazine.org/feed/']
+};
+
+const LOADING_WORDS = ['Reading...', 'Filtering...', 'Thinking...', 'Weaving...', 'Almost...'];
+let loadingWordIdx = 0;
+let loadingInterval;
+
+// ── INIT ──
+window.addEventListener('load', () => {
+  const stored = localStorage.getItem('synthesis_groq_key');
+  const storedNotion = localStorage.getItem('synthesis_notion');
+  if (stored) {
+    apiKey = stored;
+    showMainApp();
+  }
+  if (storedNotion) notionToken = storedNotion;
+
+  const today = new Date();
+  const opts = { weekday: 'short', month: 'short', day: 'numeric' };
+  if (document.getElementById('topbarDate'))
+    document.getElementById('topbarDate').textContent = today.toLocaleDateString('en-IN', opts).toUpperCase();
+
+  // Load saved brief
+  const savedBrief = localStorage.getItem('synthesis_brief_' + todayKey());
+  if (savedBrief && document.getElementById('briefContent')) {
+    document.getElementById('briefContent').innerHTML = savedBrief;
+    document.getElementById('briefContent').style.display = 'block';
+    document.getElementById('emptyState').style.display = 'none';
+  }
+});
+
+function todayKey() {
+  return new Date().toISOString().split('T')[0];
+}
+
+function startApp() {
+  const key = document.getElementById('setupKey').value.trim();
+  if (!key || key.length < 10) return;
+  apiKey = key;
+  localStorage.setItem('synthesis_groq_key', key);
+  showMainApp();
+}
+
+function showMainApp() {
+  document.getElementById('setupScreen').style.display = 'none';
+  document.getElementById('mainApp').style.display = 'block';
+  const today = new Date();
+  const opts = { weekday: 'short', month: 'short', day: 'numeric' };
+  document.getElementById('topbarDate').textContent = today.toLocaleDateString('en-IN', opts).toUpperCase();
+}
+
+function switchTab(tab) {
+  ['brief', 'yt'].forEach(t => {
+    const el = document.getElementById(t + 'Tab');
+    if (el) el.style.display = t === tab ? 'block' : 'none';
+    const nav = document.getElementById('nav-' + t);
+    if (nav) nav.classList.toggle('active', t === tab);
+  });
+}
+
+function openSettings() {
+  document.getElementById('settingsKey').value = apiKey;
+  document.getElementById('notionToken').value = notionToken;
+  document.getElementById('notifToggle').classList.toggle('on', notifEnabled);
+  document.getElementById('settingsPanel').style.display = 'block';
+}
+
+function closeSettings() {
+  document.getElementById('settingsPanel').style.display = 'none';
+}
+
+function saveSettings() {
+  const k = document.getElementById('settingsKey').value.trim();
+  const n = document.getElementById('notionToken').value.trim();
+  if (k) { apiKey = k; localStorage.setItem('synthesis_groq_key', k); }
+  if (n) { notionToken = n; localStorage.setItem('synthesis_notion', n); }
+  closeSettings();
+}
+
+async function toggleNotifications() {
+  const toggle = document.getElementById('notifToggle');
+  if (!notifEnabled) {
+    try {
+      const perm = await Notification.requestPermission();
+      if (perm === 'granted') {
+        notifEnabled = true;
+        toggle.classList.add('on');
+        scheduleNotification();
+        new Notification('Synthesis', { body: 'Morning briefs enabled. See you at 8 AM.', icon: '' });
+      }
+    } catch(e) { console.log('Notifications not supported'); }
+  } else {
+    notifEnabled = false;
+    toggle.classList.remove('on');
+  }
+}
+
+function scheduleNotification() {
+  if (!notifEnabled) return;
+  const now = new Date();
+  const next8am = new Date();
+  next8am.setHours(8, 0, 0, 0);
+  if (next8am <= now) next8am.setDate(next8am.getDate() + 1);
+  const ms = next8am - now;
+  setTimeout(() => {
+    if (Notification.permission === 'granted') {
+      new Notification('Synthesis', { body: 'Your morning brief is ready. 10 minutes to stay sharp.' });
+    }
+    scheduleNotification();
+  }, ms);
+}
+
+// ── RSS FETCHING ──
+async function fetchRSS(url) {
+  try {
+    const r = await fetch(url, { signal: AbortSignal.timeout(6000) });
+    const text = await r.text();
+    const parser = new DOMParser();
+    const xml = parser.parseFromString(text, 'text/xml');
+    const items = xml.querySelectorAll('item, entry');
+    const results = [];
+    items.forEach((item, i) => {
+      if (i >= 4) return;
+      const title = item.querySelector('title')?.textContent?.trim() || '';
+      const desc = (item.querySelector('description, summary, content')?.textContent || '').replace(/<[^>]*>/g, '').slice(0, 300);
+      const link = item.querySelector('link')?.textContent?.trim() || item.querySelector('link')?.getAttribute('href') || '';
+      const pubDate = item.querySelector('pubDate, published, updated')?.textContent?.trim() || '';
+      if (title) results.push({ title, desc, link, pubDate });
+    });
+    return results;
+  } catch(e) { return []; }
+}
+
+async function fetchTopicContent(topic) {
+  const sources = RSS_SOURCES[topic] || [];
+  const all = await Promise.all(sources.map(fetchRSS));
+  return all.flat().slice(0, 6);
+}
+
+// ── AI ──
+async function callGemini(prompt, maxTokens = 1200) {
+  const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${apiKey}`
+    },
+    body: JSON.stringify({
+      model: 'llama-3.3-70b-versatile',
+      messages: [{ role: 'user', content: prompt }],
+      max_tokens: maxTokens,
+      temperature: 0.7
+    })
+  });
+  const data = await res.json();
+  if (data.error) throw new Error(data.error.message || JSON.stringify(data.error));
+  return data.choices[0].message.content;
+}
+
+// ── GENERATE BRIEF ──
+function showLoading(msg) {
+  document.getElementById('loadingOverlay').classList.add('show');
+  document.getElementById('loadingMsg').textContent = msg || 'fetching sources';
+  loadingWordIdx = 0;
+  document.getElementById('loadingWord').textContent = LOADING_WORDS[0];
+  loadingInterval = setInterval(() => {
+    loadingWordIdx = (loadingWordIdx + 1) % LOADING_WORDS.length;
+    document.getElementById('loadingWord').textContent = LOADING_WORDS[loadingWordIdx];
+  }, 1800);
+}
+
+function hideLoading() {
+  clearInterval(loadingInterval);
+  document.getElementById('loadingOverlay').classList.remove('show');
+}
+
+function updateLoadingMsg(msg) {
+  document.getElementById('loadingMsg').textContent = msg;
+}
+
+async function generateBrief() {
+  if (!apiKey) { openSettings(); return; }
+  const genBtn = document.getElementById('genBtn');
+  genBtn.disabled = true;
+  showLoading('fetching your sources');
+
+  try {
+    const dayOfYear = Math.floor((new Date() - new Date(new Date().getFullYear(), 0, 0)) / 86400000);
+    const todayTopics = TOPICS_ROTATION[dayOfYear % 4];
+    const curiousTopic = CURIOUS_ROTATION[dayOfYear % CURIOUS_ROTATION.length];
+    const today = new Date().toLocaleDateString('en-IN', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+
+    updateLoadingMsg('reading articles');
+
+    // Fetch content in parallel
+    const [t1Content, t2Content, t3Content, curContent] = await Promise.all([
+      fetchTopicContent(todayTopics[0]),
+      fetchTopicContent(todayTopics[1]),
+      fetchTopicContent(todayTopics[2]),
+      fetchTopicContent(curiousTopic)
+    ]);
+
+    const makeArticleList = (articles) =>
+      articles.length > 0
+        ? articles.map(a => `- ${a.title}: ${a.desc}`).join('\n')
+        : '(use your knowledge of recent developments)';
+
+    updateLoadingMsg('synthesising with AI');
+
+    // SIGNAL
+    const signalPrompt = `You are writing for an Indian MBA student (beginner level, intellectually curious). 
+Today is ${today}.
+
+Write THE SIGNAL: exactly 5 sentences. Each sentence covers one major development across these topics: ${todayTopics.join(', ')} and ${curiousTopic}. 
+Written like a smart friend texting you what matters. No jargon without explanation. India angle where relevant.
+Use jargon but define it inline the first time. Help build vocabulary.
+
+Recent articles to draw from:
+${makeArticleList([...t1Content.slice(0,2), ...t2Content.slice(0,2), ...t3Content.slice(0,2)])}
+
+Output ONLY the 5 sentences, no labels, no intro.`;
+
+    const signalText = await callGemini(signalPrompt, 400);
+
+    updateLoadingMsg('writing deep dives');
+
+    // DEEP DIVES
+    const divePrompts = [
+      { topic: todayTopics[0], articles: t1Content },
+      { topic: todayTopics[1], articles: t2Content },
+      { topic: todayTopics[2], articles: t3Content }
+    ];
+
+    const dives = await Promise.all(divePrompts.map(async ({ topic, articles }) => {
+      const prompt = `You are writing a deep dive for an Indian MBA student. Beginner level but wants to build vocabulary — use jargon and define it inline on first use.
+
+Topic: ${topic}
+Today: ${today}
+
+Recent articles:
+${makeArticleList(articles)}
+
+Write in this EXACT format:
+HEADLINE: [one punchy headline, max 10 words]
+BODY: [200 words of connected prose. Use jargon, define inline. India angle if relevant. No bullet points. Make the reader feel smarter after reading.]
+LINK: [most relevant article URL from the list, or leave blank]
+
+Output only HEADLINE, BODY, LINK with those exact labels.`;
+      const raw = await callGemini(prompt, 500);
+      const headline = raw.match(/HEADLINE:\s*(.+)/)?.[1]?.trim() || topic + ' Update';
+      const body = raw.match(/BODY:\s*([\s\S]+?)(?=LINK:|$)/)?.[1]?.trim() || '';
+      const link = raw.match(/LINK:\s*(.+)/)?.[1]?.trim() || (articles[0]?.link || '');
+      return { topic, headline, body, link: link && link.startsWith('http') ? link : (articles[0]?.link || '') };
+    }));
+
+    updateLoadingMsg('finding your rabbit hole');
+
+    // RABBIT HOLE
+    const rabbitPrompt = `You are writing for a curious Indian MBA student who wants to expand their mind.
+
+Topic today: ${curiousTopic}
+${curContent.length > 0 ? 'Recent pieces: ' + makeArticleList(curContent) : ''}
+
+Write THE RABBIT HOLE: a 150-word thought piece or story about ${curiousTopic}. 
+Written as a pure observation or idea — no structure, no bullets, no headers.
+Like a beautiful paragraph from a book you can't put down.
+Make it surprising. Make it Indian-relevant if possible.
+Use rich language. Build the reader's vocabulary naturally.
+
+Output ONLY the paragraph.`;
+
+    const rabbitText = await callGemini(rabbitPrompt, 350);
+
+    hideLoading();
+
+    // RENDER
+    renderBrief({ signal: signalText, dives, rabbit: { topic: curiousTopic, text: rabbitText }, topics: todayTopics, date: today });
+
+  } catch(e) {
+    hideLoading();
+    document.getElementById('briefContent').innerHTML = `<div style="padding:24px;"><div class="error-strip">Error: ${e.message}<br><br>Check your Groq API key in Settings.</div></div>`;
+    document.getElementById('briefContent').style.display = 'block';
+    document.getElementById('emptyState').style.display = 'none';
+  }
+  genBtn.disabled = false;
+}
+
+function renderBrief({ signal, dives, rabbit, topics, date }) {
+  const diveHtml = dives.map(d => `
+    <div class="dive-card">
+      <div class="dive-topic">${d.topic}</div>
+      <div class="dive-headline">${d.headline}</div>
+      <div class="dive-body">${d.body}</div>
+      <div class="dive-footer">
+        ${d.link ? `<a class="read-link" href="${d.link}" target="_blank">Read full article →</a>` : '<span></span>'}
+        <button class="save-btn-small" onclick="saveToNotion('${encodeURIComponent(d.headline)}', '${encodeURIComponent(d.body)}', '${encodeURIComponent(d.link)}', this)">Save</button>
+      </div>
+    </div>`).join('');
+
+  const html = `
+    <div class="signal-section">
+      <div class="section-kicker">The Signal</div>
+      <div class="signal-text">${signal.replace(/\n/g, ' ')}</div>
+    </div>
+    <div class="dives-section">
+      <div style="padding:16px 20px 0; font-size:10px; font-family:'DM Mono',monospace; letter-spacing:0.15em; text-transform:uppercase; color:var(--muted);">Today's Deep Dives — ${topics.join(' · ')}</div>
+      ${diveHtml}
+    </div>
+    <div class="rabbit-section">
+      <div class="rabbit-label">The Rabbit Hole</div>
+      <div class="rabbit-topic">Today: ${rabbit.topic}</div>
+      <div class="rabbit-body">${rabbit.text}</div>
+    </div>`;
+
+  document.getElementById('briefContent').innerHTML = html;
+  document.getElementById('briefContent').style.display = 'block';
+  document.getElementById('emptyState').style.display = 'none';
+  localStorage.setItem('synthesis_brief_' + todayKey(), html);
+}
+
+// ── SAVE TO NOTION ──
+async function saveToNotion(headline, body, link, btn) {
+  if (!notionToken) {
+    btn.textContent = 'Add token in Settings';
+    setTimeout(() => btn.textContent = 'Save', 2000);
+    return;
+  }
+  btn.textContent = 'Saving...';
+  btn.disabled = true;
+  try {
+    // Search for Reading List database
+    const searchRes = await fetch('https://api.notion.com/v1/search', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${notionToken}`,
+        'Notion-Version': '2022-06-28',
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ query: 'Reading List', filter: { value: 'database', property: 'object' } })
+    });
+    const searchData = await searchRes.json();
+    const db = searchData.results?.[0];
+    if (!db) throw new Error('Reading List database not found');
+
+    await fetch('https://api.notion.com/v1/pages', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${notionToken}`,
+        'Notion-Version': '2022-06-28',
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        parent: { database_id: db.id },
+        properties: {
+          Title: { title: [{ text: { content: decodeURIComponent(headline) } }] },
+          Type: { select: { name: 'Article' } },
+          Link: { url: decodeURIComponent(link) || null },
+          Summary: { rich_text: [{ text: { content: decodeURIComponent(body).slice(0, 500) } }] }
+        }
+      })
+    });
+    btn.textContent = '✓ Saved';
+    btn.classList.add('saved');
+  } catch(e) {
+    btn.textContent = 'Error';
+    btn.disabled = false;
+    setTimeout(() => { btn.textContent = 'Save'; btn.classList.remove('saved'); }, 2000);
+  }
+}
+
+// ── YOUTUBE SUMMARISER ──
+async function summariseYT() {
+  const url = document.getElementById('ytUrl').value.trim();
+  if (!url) return;
+  if (!apiKey) { openSettings(); return; }
+
+  const btn = document.getElementById('ytBtn');
+  btn.disabled = true;
+  document.getElementById('ytResult').innerHTML = `<div style="padding:20px;display:flex;align-items:center;gap:10px;color:var(--muted);font-size:13px;font-family:'DM Mono',monospace;"><div class="spinner-inline"></div>Analysing video...</div>`;
+
+  try {
+    const videoIdMatch = url.match(/(?:v=|youtu\.be\/)([a-zA-Z0-9_-]{11})/);
+    const videoId = videoIdMatch?.[1] || '';
+
+    let transcript = null;
+    if (videoId) {
+      try {
+        const r = await fetch(`https://yt.lemnoslife.com/videos?part=transcript&id=${videoId}`, { signal: AbortSignal.timeout(5000) });
+        const d = await r.json();
+        const items = d?.items?.[0]?.transcript?.transcriptList?.[0]?.transcript;
+        if (items?.length) transcript = items.map(i => i.text).join(' ').slice(0, 10000);
+      } catch(e) {}
+    }
+
+    const prompt = transcript
+      ? `You are an MBA-level analyst briefing a student at ISB India. Analyse this YouTube transcript.
+
+Respond in EXACTLY this format:
+HEADLINE: [one-line summary of what this video is about]
+SUMMARY:
+- [key point 1]
+- [key point 2]
+- [key point 3]
+- [key point 4]
+- [key point 5]
+TAKEAWAYS:
+- [actionable insight 1]
+- [actionable insight 2]
+- [actionable insight 3]
+FRAMEWORKS: [any business frameworks/concepts mentioned, comma separated, or "none"]
+VERDICT: [YES — worth watching because X] or [SKIP — because X]
+
+Transcript: ${transcript}`
+      : `You are an MBA analyst. The user wants to understand this YouTube video: ${url}
+Based on the URL and your knowledge, provide your best analysis in EXACTLY this format:
+HEADLINE: [what this video is about]
+SUMMARY:
+- [likely key point 1]
+- [likely key point 2]
+- [likely key point 3]
+TAKEAWAYS:
+- [insight 1]
+- [insight 2]
+FRAMEWORKS: [relevant concepts]
+VERDICT: [your honest take on whether it seems worth watching]`;
+
+    const result = await callGemini(prompt, 600);
+
+    const headline = result.match(/HEADLINE:\s*(.+)/)?.[1]?.trim() || 'Video Summary';
+    const summarySection = result.match(/SUMMARY:\s*([\s\S]+?)(?=TAKEAWAYS:|$)/)?.[1] || '';
+    const takeawaysSection = result.match(/TAKEAWAYS:\s*([\s\S]+?)(?=FRAMEWORKS:|VERDICT:|$)/)?.[1] || '';
+    const frameworks = result.match(/FRAMEWORKS:\s*(.+)/)?.[1]?.trim() || '';
+    const verdict = result.match(/VERDICT:\s*(.+)/)?.[1]?.trim() || '';
+
+    const parseBullets = (text) => text.split('\n').filter(l => l.trim().match(/^[-•*]|^\d+\./)).map(l => l.replace(/^[-•*\d.]+\s*/, '').trim()).filter(Boolean);
+
+    const summaryBullets = parseBullets(summarySection);
+    const takeawayBullets = parseBullets(takeawaysSection);
+    const isYes = verdict.toLowerCase().includes('yes') || verdict.toLowerCase().includes('worth');
+
+    document.getElementById('ytResult').innerHTML = `
+      <div class="yt-card">
+        <div class="yt-card-head">
+          <span class="yt-card-label">Summary</span>
+          <span style="font-size:11px;color:var(--muted);font-family:'DM Mono',monospace;">${videoId || 'video'}</span>
+        </div>
+        <div class="yt-card-body">
+          <div style="font-family:'Playfair Display',serif;font-size:17px;color:var(--paper);line-height:1.4;margin-bottom:14px;">${headline}</div>
+          <div class="yt-section-head">Key Points</div>
+          ${summaryBullets.map(b => `<div class="yt-bullet">${b}</div>`).join('')}
+          ${takeawayBullets.length ? `<div class="yt-section-head">Takeaways</div>${takeawayBullets.map(b => `<div class="yt-bullet">${b}</div>`).join('')}` : ''}
+          ${frameworks && frameworks !== 'none' ? `<div class="yt-section-head">Frameworks</div><div class="yt-bullet">${frameworks}</div>` : ''}
+          ${verdict ? `<div class="yt-section-head">Verdict</div><div class="verdict-tag ${isYes ? 'verdict-yes' : 'verdict-no'}">${verdict}</div>` : ''}
+        </div>
+      </div>`;
+  } catch(e) {
+    document.getElementById('ytResult').innerHTML = `<div class="error-strip">Error: ${e.message}. Check your OpenAI API key.</div>`;
+  }
+  btn.disabled = false;
+}
+
+// ── KEYBOARD SHORTCUTS ──
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') closeSettings();
+  if (e.key === 'Enter' && document.getElementById('setupScreen').style.display !== 'none') startApp();
+});
+</script>
+</body>
+</html>
