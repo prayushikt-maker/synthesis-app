@@ -655,9 +655,9 @@
   <div class="setup-tagline">Your daily intelligence brief</div>
   <div class="setup-card">
     <label class="setup-label">Gemini API Key</label>
-    <input class="setup-input" type="password" id="setupKey" placeholder="AIza..." autocomplete="off" />
+    <input class="setup-input" type="password" id="setupKey" placeholder="sk-..." autocomplete="off" />
     <p class="setup-hint">
-      Free from <a href="https://aistudio.google.com" target="_blank">aistudio.google.com</a> — sign in with Google, click "Get API Key". No card needed.
+      Get your key from <a href="https://platform.openai.com/api-keys" target="_blank">platform.openai.com/api-keys</a> — starts with sk-...
     </p>
     <button class="primary-btn" onclick="startApp()">Enter Synthesis →</button>
   </div>
@@ -678,7 +678,7 @@
   </div>
 
   <div class="settings-section-title" style="margin-bottom:12px;">API Key</div>
-  <input class="settings-input" type="password" id="settingsKey" placeholder="AIza..." />
+  <input class="settings-input" type="password" id="settingsKey" placeholder="sk-..." />
 
   <div class="settings-section-title">Notifications</div>
   <div class="notif-row">
@@ -932,17 +932,22 @@ async function fetchTopicContent(topic) {
 
 // ── GEMINI ──
 async function callGemini(prompt, maxTokens = 1200) {
-  const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`, {
+  const res = await fetch('https://api.openai.com/v1/chat/completions', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${apiKey}`
+    },
     body: JSON.stringify({
-      contents: [{ parts: [{ text: prompt }] }],
-      generationConfig: { maxOutputTokens: maxTokens, temperature: 0.7 }
+      model: 'gpt-4o-mini',
+      messages: [{ role: 'user', content: prompt }],
+      max_tokens: maxTokens,
+      temperature: 0.7
     })
   });
   const data = await res.json();
   if (data.error) throw new Error(data.error.message);
-  return data.candidates[0].content.parts[0].text;
+  return data.choices[0].message.content;
 }
 
 // ── GENERATE BRIEF ──
